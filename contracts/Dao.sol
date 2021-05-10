@@ -35,6 +35,7 @@ contract Dao is DaoInterface {
     uint256 constant quorumPercentage = 60;
 
     mapping(bytes32 => Proposal) public proposals;
+    bytes32[] proposalHashes;
     mapping(address => mapping(bytes32 => bool)) public voted;
     mapping(address => uint256) public shares;
 
@@ -100,6 +101,7 @@ contract Dao is DaoInterface {
         override
         proposalNotExists(_proposalHash)
     {
+        proposalHashes.push(_proposalHash);
         proposals[_proposalHash] = Proposal(
             msg.sender,
             _proposalHash,
@@ -134,5 +136,37 @@ contract Dao is DaoInterface {
                 emit Rejected(_proposalHash);
             }
         }
+    }
+
+    function getProposalHashes() public view returns (bytes32[] memory) {
+        return proposalHashes;
+    }
+
+    function getProposalCount() public view returns (uint256) {
+        return proposalHashes.length;
+    }
+
+    function getProposal(bytes32 _proposalHash)
+        public
+        view
+        returns (
+            address creator,
+            bytes32 docHash,
+            uint256 creationTimestamp,
+            uint256 yea,
+            uint256 nay,
+            Status status
+        )
+    {
+        Proposal storage proposal = proposals[_proposalHash];
+
+        return (
+            proposal.creator,
+            proposal.docHash,
+            proposal.creationTimestamp,
+            proposal.yea,
+            proposal.nay,
+            proposal.status
+        );
     }
 }
