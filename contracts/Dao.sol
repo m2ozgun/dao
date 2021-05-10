@@ -23,9 +23,9 @@ interface DaoInterface {
 
     function vote(bytes32 _proposalHash, Vote _vote) external;
 
-    event Approved(bytes32 _proposalHash)
-    event Rejected(bytes32 _proposalHash)
-    event Vote(address _account, Vote vote)
+    event Approved(bytes32 _proposalHash);
+    event Rejected(bytes32 _proposalHash);
+    event VoteEvent(address _account, Vote vote);
 }
 
 contract Dao is DaoInterface {
@@ -121,18 +121,17 @@ contract Dao is DaoInterface {
         voted[msg.sender][_proposalHash] = true;
         if (_vote == Vote.Yes) {
             proposal.yea += shares[msg.sender];
-            emit Vote(msg.sender, _vote)
+            emit VoteEvent(msg.sender, _vote);
 
             if ((proposal.yea * 100) / totalShares > quorumPercentage) {
                 proposal.status = Status.Approved;
-                emit Approved(_proposalHash)
+                emit Approved(_proposalHash);
             }
         } else {
             proposal.nay += shares[msg.sender];
             if ((proposal.nay * 100) / totalShares > quorumPercentage) {
                 proposal.status = Status.Rejected;
-                emit Rejected(_proposalHash)
-
+                emit Rejected(_proposalHash);
             }
         }
     }
