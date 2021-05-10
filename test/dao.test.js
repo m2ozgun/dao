@@ -9,6 +9,8 @@ const BN = web3.utils.BN
 const chaiBN = require('chai-bn')(BN)
 chai.use(chaiBN)
 
+const PROPOSAL_HASH_EXAMPLE = '0x7465737400000000000000000000000000000000000000000000000000000000'
+
 contract('DAO Contract', (accounts) => {
   let wallet
   beforeEach(async () => {
@@ -58,4 +60,21 @@ contract('DAO Contract', (accounts) => {
       ).to.be.rejectedWith(/not enough shares/)
     })
   })
+
+  describe('newProposal()', () => {
+    beforeEach(async () => {
+      await dao.deposit(web3.utils.toWei('1', 'ether'), { from: accounts[0] })
+    })
+
+    it('should create proposal successfully', async () => {
+
+      await expect( dao.newProposal(PROPOSAL_HASH_EXAMPLE)).to.be.fulfilled
+    })
+    it('should not create proposal if already exists', async () => {
+        await dao.newProposal(PROPOSAL_HASH_EXAMPLE)
+        await expect( dao.newProposal(PROPOSAL_HASH_EXAMPLE)).to.be.rejectedWith(/proposal already exist/)
+      })
+  })
+
+  
 })
