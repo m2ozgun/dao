@@ -1,10 +1,20 @@
-import React, { Component } from 'react'
-import { Divider, Button, Segment } from 'semantic-ui-react'
+import React from 'react'
+import { Button, Segment } from 'semantic-ui-react'
+import useAsync from './useAsync'
+import { voteProposal } from '../api/dao'
 
-const Proposal = ({ proposal }) => {
+const Proposal = ({ proposal, web3, account }) => {
   const oneWeek = 7 * 24 * 60 * 60 * 1000
   const creationDate = new Date(proposal.creationTimestamp * 1000)
-  const lastVoteDate = new Date(creationDate + oneWeek)
+  const lastVoteDate = new Date(creationDate.getTime() + oneWeek)
+
+  const { pending, execute } = useAsync(async (params) => {
+    if (!web3) {
+      throw new Error('No web3 instance available.')
+    }
+
+    await voteProposal(web3, account, params)
+  })
 
   const getStatus = (statusIndex) => {
     switch (statusIndex) {
@@ -18,8 +28,27 @@ const Proposal = ({ proposal }) => {
         return
     }
   }
+
+  const onYeaClick = async () => {
+    console.log(pending)
+    if (pending) {
+      return
+    }
+
+    await execute({ proposalHash: proposal.docHash, vote: 0 })
+  }
+
+  const onNayClick = async () => {
+    console.log(pending)
+    if (pending) {
+      return
+    }
+
+    await execute({ proposalHash: proposal.docHash, vote: 1 })
+  }
+
   return (
-    <Segment secondary>
+    <Segment secondary style={{ marginBottom: '1em' }}>
       <p>Creator: {proposal.creator}</p>
       <p>Document Hash: {proposal.docHash}</p>
       <p>Created at: {creationDate.toLocaleString()}</p>
@@ -29,20 +58,25 @@ const Proposal = ({ proposal }) => {
       </p>
       <p>Status: {getStatus(proposal.status)}</p>
       <div>
-        Vote: <Button color="green">Yea</Button>
-        <Button color="red">Nay</Button>
+        Vote:{' '}
+        <Button color="green" onClick={onYeaClick}>
+          Yea
+        </Button>
+        <Button color="red" onClick={onNayClick}>
+          Nay
+        </Button>
       </div>
     </Segment>
   )
 }
 
-const Proposals = ({ proposals }) => {
+const Proposals = ({ proposals, web3, account }) => {
   return (
     <Segment.Group>
       {proposals &&
         proposals.map((proposal) => (
           <div key={proposal.docHash}>
-            <Proposal proposal={proposal} />
+            <Proposal proposal={proposal} web3={web3} account={account} />
           </div>
         ))}
     </Segment.Group>

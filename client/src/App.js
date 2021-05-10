@@ -1,16 +1,6 @@
 import { useEffect, useState } from 'react'
-import logo from './logo.svg'
 import './App.css'
-import {
-  Button,
-  Header,
-  Container,
-  Menu,
-  Divider,
-  Image,
-  Dropdown,
-  Input,
-} from 'semantic-ui-react'
+import { Header, Container, Menu, Input } from 'semantic-ui-react'
 import unlockAccount from './api/web3'
 import { getDao, createProposal } from './api/dao'
 import Proposals from './components/Proposals'
@@ -20,10 +10,10 @@ function App() {
   const [proposals, setProposals] = useState(undefined)
   const [web3, setWeb3] = useState(undefined)
 
-  const [daoInstance, setDaoInstance] = useState(undefined)
   const [account, setAccount] = useState(undefined)
   const [accountBalance, setAccountBalance] = useState(undefined)
   const [proposalHash, setProposalHash] = useState('')
+  const [contractAddress, setContractAddress] = useState('')
 
   const { pending, execute } = useAsync(async (params) => {
     if (!web3) {
@@ -39,9 +29,7 @@ function App() {
       return
     }
 
-    await execute(daoInstance, account, {
-      proposalHash,
-    })
+    await execute({ proposalHash })
   }
 
   useEffect(() => {
@@ -52,16 +40,16 @@ function App() {
         throw new Error('Web3 is not available.')
       }
 
-      const { daoInstance, proposals, accountBalance } = await getDao(
+      const { proposals, accountBalance, contractAddress } = await getDao(
         web3,
         account,
       )
 
-      setDaoInstance(daoInstance)
       setAccount(account)
       setProposals(proposals)
       setAccountBalance(accountBalance)
       setWeb3(web3)
+      setContractAddress(contractAddress)
       console.log(accountBalance)
     }
     init()
@@ -78,7 +66,10 @@ function App() {
         </Container>
       </Menu>
 
-      <Container style={{ marginTop: '5em', paddingLeft: '2em' }}>
+      <Container
+        style={{ marginTop: '5em', paddingLeft: '2em', paddingRight: '2em' }}
+      >
+        <p>Contract address: {contractAddress}</p>
         <Header as="h2" dividing>
           Create Proposal
         </Header>
@@ -87,7 +78,7 @@ function App() {
             icon: 'arrow right',
             onClick: onSubmit,
           }}
-          placeholder="Proposal hash"
+          placeholder="Proposal document hash"
           fluid
           value={proposalHash}
           onChange={(e) => setProposalHash(e.target.value)}
@@ -95,7 +86,7 @@ function App() {
         <Header as="h2" dividing style={{ marginTop: '2em' }}>
           Proposals
         </Header>
-        <Proposals proposals={proposals} />
+        <Proposals proposals={proposals} account={account} web3={web3} />
       </Container>
     </>
   )

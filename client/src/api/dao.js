@@ -13,8 +13,9 @@ export const getDao = async (web3, account) => {
   console.log('daoinmstance', daoInstance)
   const proposals = []
   const proposalHashes = Object.values(await daoInstance.getProposalHashes())
-  const accountBalance = await tokenInstance.balanceOf(account)
+  console.log('tokenInstance', tokenInstance)
 
+  const accountBalance = await daoInstance.shares(account)
   for (let i = 0; i < proposalHashes.length; i++) {
     const {
       creator,
@@ -29,21 +30,37 @@ export const getDao = async (web3, account) => {
       creator,
       docHash,
       creationTimestamp: creationTimestamp.toString(),
-      yea: yea.toNumber(),
-      nay: nay.toNumber(),
+      yea: yea.toString(),
+      nay: nay.toString(),
       status: status.toNumber(),
     })
   }
   return {
     daoInstance: daoInstance,
+    contractAddress: daoInstance.address,
     proposals,
     accountBalance: accountBalance.toString(),
   }
 }
 
-export const createProposal = async (daoInstance, account, params) => {
+export const createProposal = async (web3, account, params) => {
   const { proposalHash } = params
-  console.log('dao', daoInstance)
+
+  dao.setProvider(web3.currentProvider)
+  const daoInstance = await dao.deployed()
+  console.log('proposalHash', proposalHash)
+  console.log('params', params)
+
   const res = await daoInstance.newProposal(proposalHash, { from: account })
   console.log(res)
+}
+
+export const voteProposal = async (web3, account, params) => {
+  const { proposalHash, vote } = params
+
+  dao.setProvider(web3.currentProvider)
+  const daoInstance = await dao.deployed()
+  console.log('params', params)
+
+  await daoInstance.vote(proposalHash, vote, { from: account })
 }
